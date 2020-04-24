@@ -1,7 +1,8 @@
 clear
+numreps = 3;
 bmp = dir(['.\data\*.bmp']);
 bmp = {bmp.name};
-combMat = repmat(combvec(1:6,1:3,1:2)',3,1);
+combMat = repmat(combvec(1:6,1:3,1:2)',numreps,1);
 location = {'top','bottom'};
 cue = {'no','center','spatial'};
 bmps = bmp(combMat(:,1))';

@@ -12,13 +12,13 @@ PImage plus, star, blank, red;
 IntList trialnums = new IntList();
 Table tmptable, table;
 int saveTime = frameCount+1000000;
-int stimTime, respTime;
+int stimTime, respTime, stimframe;
 boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true;
-boolean showcue=false, showfix1=false, showstim=false, showfix2=false;
+boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true;
 TableRow row;
 int left, context;
 boolean  nocue, centercue, spatial, attop;
-String instructionText = "test";
+String instructionText = "Press space to begin.\nYou may have to click on this screen first.";
 int imagewidth, imageheight;
 
 void setup() {
@@ -53,6 +53,9 @@ void setup() {
     table.addRow(row);
   }
   saveTable(table, "temp.csv");
+  row = table.getRow(0);
+  left = int(row.getInt("left"));
+  //println(left);
   left = 0; 
   context = 0;
   stimuli[left][context] = loadImage("RightIncongruent.bmp");
@@ -77,13 +80,13 @@ void setup() {
   blank = loadImage("blank.bmp");
   red = loadImage("red.bmp");
 
-  row = table.getRow(rowCount);
-  left = int(row.getInt("left"));
-  context = int(row.getInt("context"));
-  nocue = boolean(row.getInt("nocue"));
-  centercue = boolean(row.getInt("centercue"));
-  spatial = boolean(row.getInt("spatial"));
-  attop = boolean(row.getInt("attop"));
+  //row = table.getRow(rowCount);
+  //left = int(row.getInt("left"));
+  //context = int(row.getInt("context"));
+  //nocue = boolean(row.getInt("nocue"));
+  //centercue = boolean(row.getInt("centercue"));
+  //spatial = boolean(row.getInt("spatial"));
+  //attop = boolean(row.getInt("attop"));
 
   FirstPicFlag = true;
 }
@@ -91,20 +94,29 @@ void setup() {
 void draw() {
   if (saveTime+cuedur+fixdur+stimdur+fixdur<frameCount) { //when eveything starts anew
     saveTime = frameCount;
+    showstimflag=true;
     rowCount += 1;
-    row = table.getRow(rowCount);
-    left = int(row.getInt("left"));
-    context = int(row.getInt("context"));
-    nocue = boolean(row.getInt("nocue"));
-    centercue = boolean(row.getInt("centercue"));
-    spatial = boolean(row.getInt("spatial"));
-    attop = boolean(row.getInt("attop"));
+    //println("rowcount += 1");
+    if (rowCount >= table.getRowCount()-1) {
+      //it's over, baby
+      String dayS = String.valueOf(day());
+      String hourS = String.valueOf(hour());
+      String minuteS = String.valueOf(minute());
+      String myfilename = "AS3out"+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
+      saveTable(table, myfilename, "csv");
+      //println("Exit");
+      exit();
+    }
+    //row = table.getRow(rowCount);
+    //left = int(row.getInt("left"));
+    //context = int(row.getInt("context"));
+    //nocue = boolean(row.getInt("nocue"));
+    //centercue = boolean(row.getInt("centercue"));
+    //spatial = boolean(row.getInt("spatial"));
+    //attop = boolean(row.getInt("attop"));
 
     FirstPicFlag = true;
     noMore = true;
-    if (rowCount >= table.getRowCount()) {
-      //it's over, baby
-    }
   } else if (saveTime+cuedur+fixdur+stimdur<frameCount) {
     showcue=false;
     showfix1=false; 
@@ -121,7 +133,6 @@ void draw() {
       showstim=true;
       showfix2=false;
     }
-    
   } else 
   if (saveTime+cuedur<frameCount) {
     showcue=false;
@@ -129,13 +140,13 @@ void draw() {
     showstim=false;
     showfix2=false;
     if (stimflag) {
-      stimTime = millis();
+
       stimflag = false;
     }
   } else 
   if (saveTime<frameCount) {
     if (FirstPicFlag) {
-      
+      //println("First flag");
       row = table.getRow(rowCount);
       left = int(row.getInt("left"));
       context = int(row.getInt("context"));
@@ -167,6 +178,11 @@ void draw() {
   } else if (showfix1) {
     image(plus, width/2, height/2, imagewidth, imageheight);
   } else if (showstim) {
+    if (showstimflag) {
+      stimframe = frameCount;
+      stimTime = millis();
+      showstimflag = false;
+    }
     if (attop) {
       image(stimuli[left][context], width/2, height/4, imagewidth, imageheight);
     } else {
@@ -192,23 +208,29 @@ void keyPressed() {
     showcue = true;
   }
   if (key == leftkey && noMore) {
+    //println("left");
     noMore = false;
     showstim = false;
     showfix2 = true;
     jumpahead = true;
+    saveTime -= stimdur - (frameCount- stimframe);
     respTime = millis();
     table.setString(rowCount, "answer", str(leftkey));
-    table.setInt(rowCount, "correct", int(leftkey==correct));
+    table.setInt(rowCount, "correct", int(Integer.parseInt(str(leftkey))== 2 - left));
+    //println(Integer.parseInt(str(leftkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
   if (key == rightkey && noMore) {
+    //println("right");
     noMore = false;
     showstim = false;
     showfix2 = true;
     jumpahead = true;
+    saveTime -= stimdur - (frameCount- stimframe);
     respTime = millis();
     table.setString(rowCount, "answer", str(rightkey));
-    table.setInt(rowCount, "correct", int(rightkey==correct));
+    table.setInt(rowCount, "correct", int(Integer.parseInt(str(rightkey))== 2 - left));
+    //println(Integer.parseInt(str(rightkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
 }
