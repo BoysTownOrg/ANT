@@ -1,5 +1,5 @@
 clear
-numreps = 3;
+numreps = 10;
 bmp = dir(['.\data\*.bmp']);
 bmp = {bmp.name};
 combMat = repmat(combvec(1:6,1:3,1:2)',numreps,1);
