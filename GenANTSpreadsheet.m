@@ -1,23 +1,12 @@
-clear
-numreps = 10;
-bmp = dir(['.\data\*.bmp']);
-bmp = {bmp.name};
-combMat = repmat(combvec(1:6,1:3,1:2)',numreps,1);
-location = {'top','bottom'};
-cue = {'no','center','spatial'};
-bmps = bmp(combMat(:,1))';
-cues = cue(combMat(:,2))';
-locations = location(combMat(:,3))';
-ANTtable = table(bmps,cues,locations);
-ANTtable.left = contains(ANTtable.bmps,'left','IgnoreCase',true);
-incongruent = ~ contains(ANTtable.bmps,'incongruent','IgnoreCase',true);
-neutral = contains(ANTtable.bmps,'neutral','IgnoreCase',true);
-ANTtable.context = incongruent + neutral;
-ANTtable.nocue = contains(ANTtable.cues,'no','IgnoreCase',true);
-ANTtable.centercue = contains(ANTtable.cues,'center','IgnoreCase',true);
-ANTtable.spatial = contains(ANTtable.cues,'spatial','IgnoreCase',true);
-ANTtable.attop = contains(ANTtable.locations,'top','IgnoreCase',true);
-ANTtable.response = repmat({''},height(ANTtable),1);
-ANTtable.RT = repmat(0.0,height(ANTtable),1);
-ANTtable.correct = repmat(0,height(ANTtable),1);
-writetable(ANTtable,'.\data\ANT.csv');
+numreps=2;
+ispractice=1;
+ANTPracTable = GenANTtable(numreps,ispractice);
+ANTPracTable = ANTPracTable(...
+    ANTPracTable.attop==1&ANTPracTable.spatial==0&ANTPracTable.centercue==1,:);
+%the above is an ad hoc solution to generating the desired number of
+%practice trials, which are always cued and in the middle
+numreps=10;
+ispractice=0;
+ANTTestTable = GenANTtable(numreps,ispractice);
+outtable = [ANTPracTable;ANTTestTable];
+writetable(outtable,'.\data\ANT.csv');

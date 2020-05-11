@@ -1,0 +1,23 @@
+function ANTtable = GenANTtable(numreps,ispractice)
+bmp = dir(['.\data\Stimuli\*.bmp']);
+bmp = {bmp.name};
+location = {'top','bottom'};
+cue = {'no','center','spatial'};
+combMat = repmat(combvec(1:length(bmp),1:length(cue),1:length(location))',numreps,1);
+bmps = bmp(combMat(:,1))';
+cues = cue(combMat(:,2))';
+locations = location(combMat(:,3))';
+ANTtable = table(bmps,cues,locations);
+ANTtable.left = contains(ANTtable.bmps,'left','IgnoreCase',true);
+incongruent = ~ contains(ANTtable.bmps,'incongruent','IgnoreCase',true);
+neutral = contains(ANTtable.bmps,'neutral','IgnoreCase',true);
+ANTtable.context = incongruent + neutral;
+ANTtable.nocue = contains(ANTtable.cues,'no','IgnoreCase',true);
+ANTtable.centercue = contains(ANTtable.cues,'center','IgnoreCase',true);
+ANTtable.spatial = contains(ANTtable.cues,'spatial','IgnoreCase',true);
+ANTtable.attop = contains(ANTtable.locations,'top','IgnoreCase',true);
+ANTtable.response = repmat({''},height(ANTtable),1);
+ANTtable.RT = repmat(0.0,height(ANTtable),1);
+ANTtable.correct = repmat(0,height(ANTtable),1);
+ANTtable.ispractice = repmat(ispractice,height(ANTtable),1);
+

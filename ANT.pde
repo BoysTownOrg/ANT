@@ -19,7 +19,7 @@ boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true;
 boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true;
 TableRow row;
 int left, context;
-boolean  nocue, centercue, spatial, attop;
+boolean  nocue, centercue, spatial, attop,ispractice;
 String instructionText = "Press space to begin.\nYou may have to click on this screen first.";
 int imagewidth, imageheight;
 int plusnudge = 8,vertoffset;
@@ -52,6 +52,7 @@ void setup() {
   table.addColumn("response");
   table.addColumn("RT");
   table.addColumn("correct");
+  table.addColumn("ispractice");
   for (int i = 0; i < tmptable.getRowCount(); i++) {
     trialnums.append(i);
   }
@@ -67,22 +68,22 @@ void setup() {
   //println(left);
   left = 0; 
   context = 0;
-  stimuli[left][context] = loadImage("RightIncongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/RightIncongruent.bmp");
   left = 0; 
   context = 1;
-  stimuli[left][context] = loadImage("RightCongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/RightCongruent.bmp");
   left = 0; 
   context = 2;
-  stimuli[left][context] = loadImage("RightNeutral.bmp");
+  stimuli[left][context] = loadImage("Stimuli/RightNeutral.bmp");
   left = 1; 
   context = 0;
-  stimuli[left][context] = loadImage("LeftIncongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/LeftIncongruent.bmp");
   left = 1; 
   context = 1;
-  stimuli[left][context] = loadImage("LeftCongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/LeftCongruent.bmp");
   left = 1; 
   context = 2;
-  stimuli[left][context] = loadImage("LeftNeutral.bmp");
+  stimuli[left][context] = loadImage("Stimuli/LeftNeutral.bmp");
 
   plus = loadImage("plus.bmp");
   star = loadImage("star.bmp");
@@ -155,6 +156,7 @@ void draw() {
       centercue = boolean(row.getInt("centercue"));
       spatial = boolean(row.getInt("spatial"));
       attop = boolean(row.getInt("attop"));
+      ispractice = boolean(row.getInt("ispractice"));
       FirstPicFlag = false;
       jumpahead = false;
       showcue=true;
@@ -209,7 +211,7 @@ void draw() {
 
 void keyPressed() {
 
-  if (key == ' ') {
+  if (key == ' ' && init) {
     saveTime = frameCount+6;
     init = false;
     background(bgcolor);
@@ -244,11 +246,11 @@ void keyPressed() {
 }
 
 void exit() {
-  //it's over, baby
+  String monthS = String.valueOf(month());
   String dayS = String.valueOf(day());
   String hourS = String.valueOf(hour());
   String minuteS = String.valueOf(minute());
-  String myfilename = "ANTout"+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
+  String myfilename = "ANTout"+"-"+monthS+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
   saveTable(table, myfilename, "csv");
 
   println("exiting");
