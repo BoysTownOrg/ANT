@@ -1,8 +1,8 @@
 char leftkey = '1';
 char rightkey = '2';
-int cuedur = 60; //in frame counts; in msec = 1000;
-int fixdur = 60; //two fix : before and after stim
-int stimdur = 120;
+int cuedur = 1000; //in frame counts; in msec
+int fixdur = 1000; //two fix : before and after stim
+int stimdur = 2000;
 boolean jumpahead = false;
 float widthfrac; // = 0.3;
 float horizfrac; // = widthfrac/3.333;
@@ -13,7 +13,7 @@ PImage[][] stimuli = new PImage[2][3];
 PImage plus, star, blank, red;
 IntList trialnums = new IntList();
 Table tmptable, table;
-int saveTime = frameCount+1000000;
+int saveTime = millis()+1000000;
 int stimTime, respTime, stimframe;
 boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true;
 boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true;
@@ -102,8 +102,8 @@ void setup() {
 }
 
 void draw() {
-  if (saveTime+cuedur+fixdur+stimdur+fixdur<frameCount) { //when eveything starts anew
-    saveTime = frameCount;
+  if (saveTime+cuedur+fixdur+stimdur+fixdur<millis()) { //when eveything starts anew
+    saveTime = millis();
     showstimflag=true;
     rowCount += 1;
     //println("rowcount += 1");
@@ -119,13 +119,13 @@ void draw() {
     //attop = boolean(row.getInt("attop"));
 
     FirstPicFlag = true;
-  } else if (saveTime+cuedur+fixdur+stimdur<frameCount) {
+  } else if (saveTime+cuedur+fixdur+stimdur<millis()) {
     showcue=false;
     showfix1=false; 
     showstim=false;
     showfix2=true;
   } else 
-  if (saveTime+cuedur+fixdur<frameCount) {
+  if (saveTime+cuedur+fixdur<millis()) {
     showcue=false;
     showfix1=false; 
     if (jumpahead) {
@@ -136,7 +136,7 @@ void draw() {
       showfix2=false;
     }
   } else 
-  if (saveTime+cuedur<frameCount) {
+  if (saveTime+cuedur<millis()) {
     showcue=false;
     showfix1=true; 
     showstim=false;
@@ -146,7 +146,7 @@ void draw() {
       stimflag = false;
     }
   } else 
-  if (saveTime<frameCount) {
+  if (saveTime<millis()) {
     if (FirstPicFlag) {
       //println("First flag");
       row = table.getRow(rowCount);
@@ -187,7 +187,7 @@ void draw() {
     image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
   } else if (showstim) {
     if (showstimflag) {
-      stimframe = frameCount;
+      stimframe = millis();
       stimTime = millis();
       showstimflag = false;
       noMore = true;
@@ -212,7 +212,7 @@ void draw() {
 void keyPressed() {
 
   if (key == ' ' && init) {
-    saveTime = frameCount+6;
+    saveTime = millis()+100;
     init = false;
     background(bgcolor);
     showcue = true;
@@ -223,7 +223,7 @@ void keyPressed() {
     showstim = false;
     showfix2 = true;
     jumpahead = true;
-    saveTime -= stimdur - (frameCount- stimframe);
+    saveTime -= stimdur - (millis()- stimframe);
     respTime = millis();
     table.setString(rowCount, "response", str(leftkey));
     table.setInt(rowCount, "correct", int(Integer.parseInt(str(leftkey))== 2 - left));
@@ -236,7 +236,7 @@ void keyPressed() {
     showstim = false;
     showfix2 = true;
     jumpahead = true;
-    saveTime -= stimdur - (frameCount- stimframe);
+    saveTime -= stimdur - (millis()- stimframe);
     respTime = millis();
     table.setString(rowCount, "response", str(rightkey));
     table.setInt(rowCount, "correct", int(Integer.parseInt(str(rightkey))== 2 - left));
