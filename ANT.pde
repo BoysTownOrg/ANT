@@ -1,6 +1,6 @@
 char leftkey = '1';
 char rightkey = '2';
-int cuedur = 1000; //in frame counts; in msec
+int cuedur = 1000, currentcuedur; //in frame counts; in msec
 int fixdur = 1000; //two fix : before and after stim
 int stimdur = 2000;
 boolean jumpahead = false;
@@ -15,14 +15,15 @@ IntList trialnums = new IntList();
 Table tmptable, table;
 int saveTime = millis()+1000000;
 int stimTime, respTime, stimframe;
-boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true;
+boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true, testhasbegun=false;
 boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true;
 TableRow row;
 int left, context;
-boolean  nocue, centercue, spatial, attop,ispractice;
-String instructionText = "Press space to begin.\nYou may have to click on this screen first.";
+boolean  nocue, centercue, spatial, attop, ispractice;
+String pracinstructionText = "Press space to begin practice.\nYou may have to click on this screen first.";
+String testinstructionText = "Press space to begin real test.\nYou may have to click on this screen first.";
 int imagewidth, imageheight;
-int plusnudge = 8,vertoffset;
+int plusnudge = 8, vertoffset;
 
 void setup() {
   String[] lines = loadStrings("graph.prm");
@@ -62,6 +63,7 @@ void setup() {
     row = tmptable.getRow(index);
     table.addRow(row);
   }
+  table.sortReverse("ispractice");
   saveTable(table, "temp.csv");
   row = table.getRow(0);
   left = int(row.getInt("left"));
@@ -102,6 +104,7 @@ void setup() {
 }
 
 void draw() {
+  // these nested if must be arranged from the latter events to erier event
   if (saveTime+cuedur+fixdur+stimdur+fixdur<millis()) { //when eveything starts anew
     saveTime = millis();
     showstimflag=true;
@@ -157,6 +160,17 @@ void draw() {
       spatial = boolean(row.getInt("spatial"));
       attop = boolean(row.getInt("attop"));
       ispractice = boolean(row.getInt("ispractice"));
+      if (ispractice) {
+        currentcuedur=0;
+      } else {
+        if (!testhasbegun) {
+          noLoop();
+          currentcuedur=cuedur;
+          testhasbegun= true;
+          init = true;
+        }
+      }
+
       FirstPicFlag = false;
       jumpahead = false;
       showcue=true;
@@ -192,7 +206,9 @@ void draw() {
       showstimflag = false;
       noMore = true;
     }
-    if (attop) {
+    if (ispractice){
+            image(stimuli[left][context], width/2, height/2, imagewidth, imageheight);
+    } else if (attop) {
       image(stimuli[left][context], width/2, height/4+vertoffset, imagewidth, imageheight);
     } else {
       image(stimuli[left][context], width/2, height*3/4-vertoffset, imagewidth, imageheight);
@@ -203,7 +219,11 @@ void draw() {
     image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
   }
   if (init) {
-    text(instructionText, width/2, height/2);
+    if (!testhasbegun) {
+      text(pracinstructionText, width/2, height/2);
+    } else {
+      text(testinstructionText, width/2, height/2);
+    }
   }
 }
 
@@ -216,6 +236,9 @@ void keyPressed() {
     init = false;
     background(bgcolor);
     showcue = true;
+    if (testhasbegun) {
+      loop();
+    }
   }
   if (key == leftkey && noMore) {
     //println("left");
