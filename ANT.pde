@@ -2,7 +2,10 @@ char leftkey = '1';
 char rightkey = '2';
 int cuedur = 1000, currentcuedur; //in frame counts; in msec
 int fixdur = 1000; //two fix : before and after stim
+int fixdur2 = 1500;
 int stimdur = 2000;
+int feedbackdur = 1500;
+int iscorrect = 0;
 boolean jumpahead = false;
 float widthfrac; // = 0.3;
 float horizfrac; // = widthfrac/3.333;
@@ -105,7 +108,7 @@ void setup() {
 
 void draw() {
   // these nested if must be arranged from the latter events to erier event
-  if (saveTime+cuedur+fixdur+stimdur+fixdur<millis()) { //when eveything starts anew
+  if (saveTime+cuedur+fixdur+stimdur+fixdur2<millis()) { //when eveything starts anew
     saveTime = millis();
     showstimflag=true;
     rowCount += 1;
@@ -160,14 +163,19 @@ void draw() {
       spatial = boolean(row.getInt("spatial"));
       attop = boolean(row.getInt("attop"));
       ispractice = boolean(row.getInt("ispractice"));
+      background(bgcolor);
+      respTime = -999;
+      iscorrect = 0;
       if (ispractice) {
         currentcuedur=0;
+        fixdur2 = 1500;
       } else {
         if (!testhasbegun) {
           noLoop();
           currentcuedur=cuedur;
           testhasbegun= true;
           init = true;
+          fixdur2 = 1000;
         }
       }
 
@@ -206,25 +214,47 @@ void draw() {
       showstimflag = false;
       noMore = true;
     }
-    if (ispractice){
-            image(stimuli[left][context], width/2, height/2, imagewidth, imageheight);
+    if (ispractice) {
+      image(stimuli[left][context], width/2, height/2, imagewidth, imageheight);
     } else if (attop) {
       image(stimuli[left][context], width/2, height/4+vertoffset, imagewidth, imageheight);
     } else {
       image(stimuli[left][context], width/2, height*3/4-vertoffset, imagewidth, imageheight);
     }
   } else if (showfix2) {
+    if (ispractice) {
+      background(bgcolor);
+      if ((respTime > 0) && (iscorrect==1)) {
+        String feedbacktext = "Correct!\n"+ "response time =" + str(respTime-stimTime) + " milliseconds";
+        fill(0,0,255);
+        text(feedbacktext,   width/2, height/2);  
+        fill(0);
+      };
+      if ((respTime > 0) && (iscorrect==0)) {
+        String feedbacktext = "Incorrect.\n"+ "response time =" + str(respTime-stimTime) + " milliseconds";
+        fill(255,0,0);
+        text(feedbacktext,   width/2, height/2);    
+        fill(0);
+      };
+      if (respTime < 0){
+        String feedbacktext = "No response!";
+        fill(255,0,0);
+        text(feedbacktext,   width/2, height/2);
+        fill(0);
+      }
+    } else {
     image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
     image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
     image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
   }
-  if (init) {
-    if (!testhasbegun) {
-      text(pracinstructionText, width/2, height/2);
-    } else {
-      text(testinstructionText, width/2, height/2);
-    }
+}
+if (init) {
+  if (!testhasbegun) {
+    text(pracinstructionText, width/2, height/2);
+  } else {
+    text(testinstructionText, width/2, height/2);
   }
+}
 }
 
 
@@ -237,6 +267,7 @@ void keyPressed() {
     background(bgcolor);
     showcue = true;
     if (testhasbegun) {
+      background(bgcolor);
       loop();
     }
   }
@@ -249,7 +280,8 @@ void keyPressed() {
     saveTime -= stimdur - (millis()- stimframe);
     respTime = millis();
     table.setString(rowCount, "response", str(leftkey));
-    table.setInt(rowCount, "correct", int(Integer.parseInt(str(leftkey))== 2 - left));
+    iscorrect = int(Integer.parseInt(str(leftkey))== 2 - left);
+    table.setInt(rowCount, "correct", iscorrect);
     //println(Integer.parseInt(str(leftkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
@@ -262,7 +294,8 @@ void keyPressed() {
     saveTime -= stimdur - (millis()- stimframe);
     respTime = millis();
     table.setString(rowCount, "response", str(rightkey));
-    table.setInt(rowCount, "correct", int(Integer.parseInt(str(rightkey))== 2 - left));
+    iscorrect = int(Integer.parseInt(str(rightkey))== 2 - left);
+    table.setInt(rowCount, "correct", iscorrect);
     //println(Integer.parseInt(str(rightkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
