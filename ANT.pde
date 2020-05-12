@@ -5,7 +5,7 @@ int fixdur = 1000; //two fix : before and after stim
 int fixdur2 = 1500;
 int stimdur = 2000;
 int feedbackdur = 1500;
-int iscorrect = 0;
+int iscorrect = 0, totalPrac=0, currentPracCorrect=0;
 boolean jumpahead = false;
 float widthfrac; // = 0.3;
 float horizfrac; // = widthfrac/3.333;
@@ -19,12 +19,13 @@ Table tmptable, table;
 int saveTime = millis()+1000000;
 int stimTime, respTime, stimframe;
 boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true, testhasbegun=false;
-boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true;
+boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true, doOnce = false;
 TableRow row;
 int left, context;
-boolean  nocue, centercue, spatial, attop, ispractice;
-String pracinstructionText = "Press space to begin practice.\nYou may have to click on this screen first.";
-String testinstructionText = "Press space to begin real test.\nYou may have to click on this screen first.";
+boolean  nocue, centercue, spatial, attop, ispractice, firsttesttrial=false;
+String [] pracinstructions; // = "Press space to begin practice.\nYou may have to click on this screen first.";
+String [] testinstructions; // = "Press space to begin real test.\nYou may have to click on this screen first.";
+String testinstructionText, pracinstructionText;
 int imagewidth, imageheight;
 int plusnudge = 8, vertoffset;
 
@@ -33,6 +34,10 @@ void setup() {
   widthfrac = Float.valueOf(lines[0]);
   horizfrac = widthfrac/3.333;
   vertoffset = - Integer.valueOf(lines[1]);
+  testinstructions = loadStrings("TestInstructions.txt");
+  pracinstructions = loadStrings("PracInstructions.txt");
+  testinstructionText = join(testinstructions, "\n");
+  pracinstructionText = join(pracinstructions, "\n");
   background(bgcolor);
   frameRate(60);
   fullScreen();
@@ -166,6 +171,12 @@ void draw() {
       background(bgcolor);
       respTime = -999;
       iscorrect = 0;
+      FirstPicFlag = false;
+      jumpahead = false;
+      showcue=true;
+      showfix1=false; 
+      showstim=false;
+      showfix2=false;
       if (ispractice) {
         currentcuedur=0;
         fixdur2 = 1500;
@@ -176,20 +187,21 @@ void draw() {
           testhasbegun= true;
           init = true;
           fixdur2 = 1000;
+          showcue=false; 
+          //note showcue depends on being the last setting of this in FirstPicFlag
         }
       }
-
-      FirstPicFlag = false;
-      jumpahead = false;
-      showcue=true;
-      showfix1=false; 
-      showstim=false;
-      showfix2=false;
     }
   }
 
   if (showcue) {
     noMore = false;
+    if (firsttesttrial) {
+      background(bgcolor);
+      println("firsttesttrial");
+      firsttesttrial = false;
+    }
+    image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
     if (nocue) {
       //image(blank, width/2, height/2, imagewidth, imageheight);
       image(blank, width/2, height/4-vertoffset, imagewidth, imageheight);
@@ -213,6 +225,7 @@ void draw() {
       stimTime = millis();
       showstimflag = false;
       noMore = true;
+      doOnce = true;
     }
     if (ispractice) {
       image(stimuli[left][context], width/2, height/2, imagewidth, imageheight);
@@ -225,36 +238,58 @@ void draw() {
     if (ispractice) {
       background(bgcolor);
       if ((respTime > 0) && (iscorrect==1)) {
-        String feedbacktext = "Correct!\n"+ "response time =" + str(respTime-stimTime) + " milliseconds";
-        fill(0,0,255);
-        text(feedbacktext,   width/2, height/2);  
+        if (doOnce) {
+          totalPrac +=1;
+          currentPracCorrect += 1;
+          doOnce = false;
+        }
+        String feedbacktext = "Correct!\n"+ 
+          "response time = " + str(respTime-stimTime) + " milliseconds\n" +
+          str(100*currentPracCorrect/totalPrac) + " percent correct\n\n";
+        fill(0, 0, 255);
+        text(feedbacktext, width/2, height/2);  
         fill(0);
       };
       if ((respTime > 0) && (iscorrect==0)) {
-        String feedbacktext = "Incorrect.\n"+ "response time =" + str(respTime-stimTime) + " milliseconds";
-        fill(255,0,0);
-        text(feedbacktext,   width/2, height/2);    
+        if (doOnce) {
+          totalPrac +=1;
+          doOnce = false;
+        }
+        String feedbacktext = "Incorrect.\n"+ 
+          "response time = " + str(respTime-stimTime) + " milliseconds\n" +
+          str(100*currentPracCorrect/totalPrac) + " percent correct\n\n";
+        fill(255, 0, 0);
+        text(feedbacktext, width/2, height/2);    
         fill(0);
       };
-      if (respTime < 0){
+      if (respTime < 0) {
+        if (doOnce) {
+          totalPrac +=1;
+          doOnce = false;
+        }
         String feedbacktext = "No response!";
-        fill(255,0,0);
-        text(feedbacktext,   width/2, height/2);
+        fill(255, 0, 0);
+        text(feedbacktext, width/2, height/2);
         fill(0);
       }
     } else {
-    image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
-    image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
-    image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
+      image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
+      image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
+      image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
+    }
   }
-}
-if (init) {
-  if (!testhasbegun) {
-    text(pracinstructionText, width/2, height/2);
-  } else {
-    text(testinstructionText, width/2, height/2);
+  if (init) {
+    if (!testhasbegun) {
+      textSize(textsize/2);
+      text(pracinstructionText, width/16, height/4, width*7/8, height*3/4);
+      textSize(textsize);
+    } else {
+      textSize(textsize/2);
+      text(testinstructionText, width/16, height/4, width*7/8, height*3/4);
+      textSize(textsize);
+      firsttesttrial = true;
+    }
   }
-}
 }
 
 
@@ -277,7 +312,7 @@ void keyPressed() {
     showstim = false;
     showfix2 = true;
     jumpahead = true;
-    saveTime -= stimdur - (millis()- stimframe);
+    saveTime -= stimdur - (millis()- stimframe); //cut from thew total time
     respTime = millis();
     table.setString(rowCount, "response", str(leftkey));
     iscorrect = int(Integer.parseInt(str(leftkey))== 2 - left);
@@ -291,7 +326,7 @@ void keyPressed() {
     showstim = false;
     showfix2 = true;
     jumpahead = true;
-    saveTime -= stimdur - (millis()- stimframe);
+    saveTime -= stimdur - (millis()- stimframe); //cut from thew total time
     respTime = millis();
     table.setString(rowCount, "response", str(rightkey));
     iscorrect = int(Integer.parseInt(str(rightkey))== 2 - left);
