@@ -16,9 +16,12 @@ public class ANT extends PApplet {
 
 char leftkey = '1';
 char rightkey = '2';
-int cuedur = 60; //in frame counts; in msec = 1000;
-int fixdur = 60; //two fix : before and after stim
-int stimdur = 120;
+int cuedur = 1000, currentcuedur; //in frame counts; in msec
+int fixdur = 1000; //two fix : before and after stim
+int fixdur2 = 1500;
+int stimdur = 2000;
+int feedbackdur = 1500;
+int iscorrect = 0, totalPrac=0, currentPracCorrect=0;
 boolean jumpahead = false;
 float widthfrac; // = 0.3;
 float horizfrac; // = widthfrac/3.333;
@@ -29,22 +32,28 @@ PImage[][] stimuli = new PImage[2][3];
 PImage plus, star, blank, red;
 IntList trialnums = new IntList();
 Table tmptable, table;
-int saveTime = frameCount+1000000;
+int saveTime = millis()+1000000;
 int stimTime, respTime, stimframe;
-boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true;
-boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true;
+boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true, testhasbegun=false;
+boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true, doOnce = false;
 TableRow row;
 int left, context;
-boolean  nocue, centercue, spatial, attop;
-String instructionText = "Press space to begin.\nYou may have to click on this screen first.";
+boolean  nocue, centercue, spatial, attop, ispractice, firsttesttrial=false;
+String [] pracinstructions; // = "Press space to begin practice.\nYou may have to click on this screen first.";
+String [] testinstructions; // = "Press space to begin real test.\nYou may have to click on this screen first.";
+String testinstructionText, pracinstructionText;
 int imagewidth, imageheight;
-int plusnudge = 8,vertoffset;
+int plusnudge = 8, vertoffset;
 
 public void setup() {
   String[] lines = loadStrings("graph.prm");
   widthfrac = Float.valueOf(lines[0]);
   horizfrac = widthfrac/3.333f;
   vertoffset = - Integer.valueOf(lines[1]);
+  testinstructions = loadStrings("TestInstructions.txt");
+  pracinstructions = loadStrings("PracInstructions.txt");
+  testinstructionText = join(testinstructions, "\n");
+  pracinstructionText = join(pracinstructions, "\n");
   background(bgcolor);
   frameRate(60);
   
@@ -68,6 +77,7 @@ public void setup() {
   table.addColumn("response");
   table.addColumn("RT");
   table.addColumn("correct");
+  table.addColumn("ispractice");
   for (int i = 0; i < tmptable.getRowCount(); i++) {
     trialnums.append(i);
   }
@@ -77,28 +87,29 @@ public void setup() {
     row = tmptable.getRow(index);
     table.addRow(row);
   }
+  table.sortReverse("ispractice");
   saveTable(table, "temp.csv");
   row = table.getRow(0);
   left = PApplet.parseInt(row.getInt("left"));
   //println(left);
   left = 0; 
   context = 0;
-  stimuli[left][context] = loadImage("RightIncongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/RightIncongruent.bmp");
   left = 0; 
   context = 1;
-  stimuli[left][context] = loadImage("RightCongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/RightCongruent.bmp");
   left = 0; 
   context = 2;
-  stimuli[left][context] = loadImage("RightNeutral.bmp");
+  stimuli[left][context] = loadImage("Stimuli/RightNeutral.bmp");
   left = 1; 
   context = 0;
-  stimuli[left][context] = loadImage("LeftIncongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/LeftIncongruent.bmp");
   left = 1; 
   context = 1;
-  stimuli[left][context] = loadImage("LeftCongruent.bmp");
+  stimuli[left][context] = loadImage("Stimuli/LeftCongruent.bmp");
   left = 1; 
   context = 2;
-  stimuli[left][context] = loadImage("LeftNeutral.bmp");
+  stimuli[left][context] = loadImage("Stimuli/LeftNeutral.bmp");
 
   plus = loadImage("plus.bmp");
   star = loadImage("star.bmp");
@@ -117,8 +128,9 @@ public void setup() {
 }
 
 public void draw() {
-  if (saveTime+cuedur+fixdur+stimdur+fixdur<frameCount) { //when eveything starts anew
-    saveTime = frameCount;
+  // these nested if must be arranged from the latter events to erier event
+  if (saveTime+cuedur+fixdur+stimdur+fixdur2<millis()) { //when eveything starts anew
+    saveTime = millis();
     showstimflag=true;
     rowCount += 1;
     //println("rowcount += 1");
@@ -134,13 +146,13 @@ public void draw() {
     //attop = boolean(row.getInt("attop"));
 
     FirstPicFlag = true;
-  } else if (saveTime+cuedur+fixdur+stimdur<frameCount) {
+  } else if (saveTime+cuedur+fixdur+stimdur<millis()) {
     showcue=false;
     showfix1=false; 
     showstim=false;
     showfix2=true;
   } else 
-  if (saveTime+cuedur+fixdur<frameCount) {
+  if (saveTime+cuedur+fixdur<millis()) {
     showcue=false;
     showfix1=false; 
     if (jumpahead) {
@@ -151,7 +163,7 @@ public void draw() {
       showfix2=false;
     }
   } else 
-  if (saveTime+cuedur<frameCount) {
+  if (saveTime+cuedur<millis()) {
     showcue=false;
     showfix1=true; 
     showstim=false;
@@ -161,7 +173,7 @@ public void draw() {
       stimflag = false;
     }
   } else 
-  if (saveTime<frameCount) {
+  if (saveTime<millis()) {
     if (FirstPicFlag) {
       //println("First flag");
       row = table.getRow(rowCount);
@@ -171,17 +183,41 @@ public void draw() {
       centercue = PApplet.parseBoolean(row.getInt("centercue"));
       spatial = PApplet.parseBoolean(row.getInt("spatial"));
       attop = PApplet.parseBoolean(row.getInt("attop"));
+      ispractice = PApplet.parseBoolean(row.getInt("ispractice"));
+      background(bgcolor);
+      respTime = -999;
+      iscorrect = 0;
       FirstPicFlag = false;
       jumpahead = false;
       showcue=true;
       showfix1=false; 
       showstim=false;
       showfix2=false;
+      if (ispractice) {
+        currentcuedur=0;
+        fixdur2 = 1500;
+      } else {
+        if (!testhasbegun) {
+          noLoop();
+          currentcuedur=cuedur;
+          testhasbegun= true;
+          init = true;
+          fixdur2 = 1000;
+          showcue=false; 
+          //note showcue depends on being the last setting of this in FirstPicFlag
+        }
+      }
     }
   }
 
   if (showcue) {
     noMore = false;
+    if (firsttesttrial) {
+      background(bgcolor);
+      println("firsttesttrial");
+      firsttesttrial = false;
+    }
+    image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
     if (nocue) {
       //image(blank, width/2, height/2, imagewidth, imageheight);
       image(blank, width/2, height/4-vertoffset, imagewidth, imageheight);
@@ -201,23 +237,74 @@ public void draw() {
     image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
   } else if (showstim) {
     if (showstimflag) {
-      stimframe = frameCount;
+      stimframe = millis();
       stimTime = millis();
       showstimflag = false;
       noMore = true;
+      doOnce = true;
     }
-    if (attop) {
+    if (ispractice) {
+      image(stimuli[left][context], width/2, height/2, imagewidth, imageheight);
+    } else if (attop) {
       image(stimuli[left][context], width/2, height/4+vertoffset, imagewidth, imageheight);
     } else {
       image(stimuli[left][context], width/2, height*3/4-vertoffset, imagewidth, imageheight);
     }
   } else if (showfix2) {
-    image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
-    image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
-    image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
+    if (ispractice) {
+      background(bgcolor);
+      if ((respTime > 0) && (iscorrect==1)) {
+        if (doOnce) {
+          totalPrac +=1;
+          currentPracCorrect += 1;
+          doOnce = false;
+        }
+        String feedbacktext = "Correct!\n"+ 
+          "response time = " + str(respTime-stimTime) + " milliseconds\n" +
+          str(100*currentPracCorrect/totalPrac) + " percent correct\n\n";
+        fill(0, 0, 255);
+        text(feedbacktext, width/2, height/2);  
+        fill(0);
+      };
+      if ((respTime > 0) && (iscorrect==0)) {
+        if (doOnce) {
+          totalPrac +=1;
+          doOnce = false;
+        }
+        String feedbacktext = "Incorrect.\n"+ 
+          "response time = " + str(respTime-stimTime) + " milliseconds\n" +
+          str(100*currentPracCorrect/totalPrac) + " percent correct\n\n";
+        fill(255, 0, 0);
+        text(feedbacktext, width/2, height/2);    
+        fill(0);
+      };
+      if (respTime < 0) {
+        if (doOnce) {
+          totalPrac +=1;
+          doOnce = false;
+        }
+        String feedbacktext = "No response!";
+        fill(255, 0, 0);
+        text(feedbacktext, width/2, height/2);
+        fill(0);
+      }
+    } else {
+      image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
+      image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
+      image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
+    }
   }
   if (init) {
-    text(instructionText, width/2, height/2);
+    if (!testhasbegun) {
+      textSize(textsize/2);
+      text(pracinstructionText, width/16, height/4, width*7/8, height*3/4);
+      textSize(textsize);
+    } else {
+      textSize(textsize/2);
+      text(testinstructionText, width/16, height/4, width*7/8, height*3/4);
+      textSize(textsize);
+      firsttesttrial = true;
+    }
   }
 }
 
@@ -225,11 +312,15 @@ public void draw() {
 
 public void keyPressed() {
 
-  if (key == ' ') {
-    saveTime = frameCount+6;
+  if (key == ' ' && init) {
+    saveTime = millis()+100;
     init = false;
     background(bgcolor);
     showcue = true;
+    if (testhasbegun) {
+      background(bgcolor);
+      loop();
+    }
   }
   if (key == leftkey && noMore) {
     //println("left");
@@ -237,10 +328,11 @@ public void keyPressed() {
     showstim = false;
     showfix2 = true;
     jumpahead = true;
-    saveTime -= stimdur - (frameCount- stimframe);
+    saveTime -= stimdur - (millis()- stimframe); //cut from thew total time
     respTime = millis();
     table.setString(rowCount, "response", str(leftkey));
-    table.setInt(rowCount, "correct", PApplet.parseInt(Integer.parseInt(str(leftkey))== 2 - left));
+    iscorrect = PApplet.parseInt(Integer.parseInt(str(leftkey))== 2 - left);
+    table.setInt(rowCount, "correct", iscorrect);
     //println(Integer.parseInt(str(leftkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
@@ -250,27 +342,27 @@ public void keyPressed() {
     showstim = false;
     showfix2 = true;
     jumpahead = true;
-    saveTime -= stimdur - (frameCount- stimframe);
+    saveTime -= stimdur - (millis()- stimframe); //cut from thew total time
     respTime = millis();
     table.setString(rowCount, "response", str(rightkey));
-    table.setInt(rowCount, "correct", PApplet.parseInt(Integer.parseInt(str(rightkey))== 2 - left));
+    iscorrect = PApplet.parseInt(Integer.parseInt(str(rightkey))== 2 - left);
+    table.setInt(rowCount, "correct", iscorrect);
     //println(Integer.parseInt(str(rightkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
   }
 }
 
 public void exit() {
-  //it's over, baby
+  String monthS = String.valueOf(month());
   String dayS = String.valueOf(day());
   String hourS = String.valueOf(hour());
   String minuteS = String.valueOf(minute());
-  String myfilename = "ANTout"+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
+  String myfilename = "ANTout"+"-"+monthS+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
   saveTable(table, myfilename, "csv");
 
   println("exiting");
   super.exit();
 }
-
   public void settings() {  fullScreen(); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "ANT" };
