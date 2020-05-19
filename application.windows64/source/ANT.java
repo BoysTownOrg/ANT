@@ -14,8 +14,8 @@ import java.io.IOException;
 
 public class ANT extends PApplet {
 
-char leftkey = '1';
-char rightkey = '2';
+char leftkey = 'z';
+char rightkey = 'm';
 int cuedur = 1000, currentcuedur; //in frame counts; in msec
 int fixdur = 1000; //two fix : before and after stim
 int fixdur2 = 1500;
@@ -214,7 +214,7 @@ public void draw() {
     noMore = false;
     if (firsttesttrial) {
       background(bgcolor);
-      println("firsttesttrial");
+      //println("firsttesttrial");
       firsttesttrial = false;
     }
     image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
@@ -247,8 +247,10 @@ public void draw() {
       image(stimuli[left][context], width/2, height/2, imagewidth, imageheight);
     } else if (attop) {
       image(stimuli[left][context], width/2, height/4+vertoffset, imagewidth, imageheight);
+      image(blank, width/2, height/2, imagewidth, imageheight);
     } else {
       image(stimuli[left][context], width/2, height*3/4-vertoffset, imagewidth, imageheight);
+      image(blank, width/2, height/2, imagewidth, imageheight);
     }
   } else if (showfix2) {
     if (ispractice) {
@@ -289,7 +291,7 @@ public void draw() {
         fill(0);
       }
     } else {
-      image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
+      image(blank, width/2, height/2, imagewidth, imageheight);
       image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
       image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
     }
@@ -331,7 +333,11 @@ public void keyPressed() {
     saveTime -= stimdur - (millis()- stimframe); //cut from thew total time
     respTime = millis();
     table.setString(rowCount, "response", str(leftkey));
-    iscorrect = PApplet.parseInt(Integer.parseInt(str(leftkey))== 2 - left);
+    if (left == 1) {
+      iscorrect = 1;
+    } else {
+      iscorrect = 0;
+    }
     table.setInt(rowCount, "correct", iscorrect);
     //println(Integer.parseInt(str(leftkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
@@ -345,7 +351,11 @@ public void keyPressed() {
     saveTime -= stimdur - (millis()- stimframe); //cut from thew total time
     respTime = millis();
     table.setString(rowCount, "response", str(rightkey));
-    iscorrect = PApplet.parseInt(Integer.parseInt(str(rightkey))== 2 - left);
+    if (left == 0) {
+      iscorrect = 1;
+    } else {
+      iscorrect = 0;
+    }
     table.setInt(rowCount, "correct", iscorrect);
     //println(Integer.parseInt(str(rightkey)),left);
     table.setFloat(rowCount, "RT", respTime-stimTime);
