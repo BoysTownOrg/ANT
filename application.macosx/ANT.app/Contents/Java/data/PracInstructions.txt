@@ -1,7 +1,7 @@
 
 
-If the middle arrow is pointing left, press '1' on the keyboard.
+If the middle arrow is pointing left, press 'z' on the keyboard.
 
-If the middle arrow is pointing right, press '2' on the keyboard.
+If the middle arrow is pointing right, press 'm' on the keyboard.
 
 Press SPACE to continue.
