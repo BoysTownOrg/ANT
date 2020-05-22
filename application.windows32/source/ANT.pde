@@ -216,7 +216,11 @@ void draw() {
       }
     }
   } else if (showfix1) {
-    image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
+    if (nocue) {
+      image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
+    } else {
+      image(blank, width/2, height/2, imagewidth, imageheight);
+    }
     image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
     image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
   } else if (showstim) {
