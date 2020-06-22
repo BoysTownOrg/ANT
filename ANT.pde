@@ -22,7 +22,7 @@ boolean stimflag=true, FirstPicFlag=true, noMore = true, init = true, testhasbeg
 boolean showcue=false, showfix1=false, showstim=false, showfix2=false, showstimflag=true, doOnce = false;
 TableRow row;
 int left, context;
-boolean  nocue, centercue, spatial, attop, ispractice, firsttesttrial=false;
+boolean  nocue, centercue, spatial, both, attop, ispractice, firsttesttrial=false;
 String [] pracinstructions; // = "Press space to begin practice.\nYou may have to click on this screen first.";
 String [] testinstructions; // = "Press space to begin real test.\nYou may have to click on this screen first.";
 String testinstructionText, pracinstructionText;
@@ -39,7 +39,7 @@ void setup() {
   testinstructionText = join(testinstructions, "\n");
   pracinstructionText = join(pracinstructions, "\n");
   background(bgcolor);
-  frameRate(60);
+  //frameRate(60);
   fullScreen();
   textSize(textsize);
   textAlign(CENTER);
@@ -57,6 +57,7 @@ void setup() {
   table.addColumn("nocue");
   table.addColumn("centercue");
   table.addColumn("spatial");
+  table.addColumn("both");
   table.addColumn("attop");
   table.addColumn("response");
   table.addColumn("RT");
@@ -166,6 +167,7 @@ void draw() {
       nocue = boolean(row.getInt("nocue"));
       centercue = boolean(row.getInt("centercue"));
       spatial = boolean(row.getInt("spatial"));
+      both = boolean(row.getInt("both"));
       attop = boolean(row.getInt("attop"));
       ispractice = boolean(row.getInt("ispractice"));
       background(bgcolor);
@@ -208,6 +210,9 @@ void draw() {
       image(blank, width/2, height*3/4+vertoffset, imagewidth, imageheight);
     } else if (centercue) {
       image(star, width/2, height/2, imagewidth, imageheight);
+    } else if (both) {
+        image(star, width/2, height/4+vertoffset, imagewidth, imageheight);
+        image(star, width/2, height*3/4-vertoffset, imagewidth, imageheight);
     } else if (spatial) {
       if (attop) {
         image(star, width/2, height/4+vertoffset, imagewidth, imageheight);
@@ -220,6 +225,7 @@ void draw() {
       image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
     } else {
       image(blank, width/2, height/2, imagewidth, imageheight);
+      image(plus, plusnudge+width/2, height/2, imagewidth, imageheight);
     }
     image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
     image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
@@ -235,10 +241,10 @@ void draw() {
       image(stimuli[left][context], width/2, height/2, imagewidth, imageheight);
     } else if (attop) {
       image(stimuli[left][context], width/2, height/4+vertoffset, imagewidth, imageheight);
-      image(blank, width/2, height/2, imagewidth, imageheight);
+      //image(blank, width/2, height/2, imagewidth, imageheight);
     } else {
       image(stimuli[left][context], width/2, height*3/4-vertoffset, imagewidth, imageheight);
-      image(blank, width/2, height/2, imagewidth, imageheight);
+      //image(blank, width/2, height/2, imagewidth, imageheight);
     }
   } else if (showfix2) {
     if (ispractice) {
@@ -279,7 +285,7 @@ void draw() {
         fill(0);
       }
     } else {
-      image(blank, width/2, height/2, imagewidth, imageheight);
+      //image(blank, width/2, height/2, imagewidth, imageheight);
       image(blank, width/2, height/4+vertoffset, imagewidth, imageheight);
       image(blank, width/2, height*3/4-vertoffset, imagewidth, imageheight);
     }
