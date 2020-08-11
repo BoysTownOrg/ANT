@@ -1,3 +1,7 @@
+import uibooster.*;
+UiBooster booster;
+File directory;
+
 char leftkey = 'z';
 char rightkey = 'm';
 int cuedur = 1000, currentcuedur; //in frame counts; in msec
@@ -34,6 +38,7 @@ void setup() {
   widthfrac = Float.valueOf(lines[0]);
   horizfrac = widthfrac/3.333;
   vertoffset = - Integer.valueOf(lines[1]);
+  booster = new UiBooster();
   testinstructions = loadStrings("TestInstructions.txt");
   pracinstructions = loadStrings("PracInstructions.txt");
   testinstructionText = join(testinstructions, "\n");
@@ -362,7 +367,8 @@ void exit() {
   String hourS = String.valueOf(hour());
   String minuteS = String.valueOf(minute());
   String myfilename = "ANTout"+"-"+monthS+"-"+dayS+"-"+hourS+"-"+minuteS+".csv";
-  saveTable(table, myfilename, "csv");
+  directory = booster.showDirectorySelection();
+  saveTable(table, directory.getAbsolutePath() + "/" +myfilename, "csv");
 
   println("exiting");
   super.exit();
